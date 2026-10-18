@@ -53,16 +53,14 @@ function PlaygroundApp() {
         const parsed = JSON.parse(raw);
         localStorage.removeItem('midaddExternalTemplate');
         if (parsed.markdown) {
-          setTimeout(() => {
-            setMarkdown(parsed.markdown);
-            if (parsed.title) {
-              setDocumentTitle(parsed.title);
-            }
-          }, 0);
+          setMarkdown(parsed.markdown);
+          if (parsed.title) {
+            setDocumentTitle(parsed.title);
+          }
         }
       }
     } catch {}
-  }, []);
+  }, []); // Run once on mount
 
   // Global keyboard shortcuts (Ctrl+K or Cmd+K to open insert modal)
   useEffect(() => {
