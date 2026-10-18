@@ -25,6 +25,11 @@ import { useTheme } from '@/lib/theme';
 import { SAMPLE_MARKDOWN_PRESETS, markdownToHtml } from '@/lib/markdown-to-html';
 import { SavedDocument } from '@/types';
 
+type InitialDocData = {
+  markdown: string;
+  title: string;
+};
+
 function PlaygroundApp() {
   const { t } = useLanguage();
   const session = useSession();
@@ -34,11 +39,14 @@ function PlaygroundApp() {
   // Initial document state (preloaded with rich preset so playground is immediately stunning)
   // Load external template if selected from /templates (lazily in useState initializer to avoid effect setState)
   const defaultPreset = SAMPLE_MARKDOWN_PRESETS[0];
-  const [initialData] = useState(() => {
+  const [initialData] = useState<InitialDocData>(() => {
     try {
       const raw = localStorage.getItem('midaddExternalTemplate');
       if (raw) {
-        const parsed = JSON.parse(raw);
+        const parsed = JSON.parse(raw) as {
+          markdown?: string;
+          title?: string;
+        };
         localStorage.removeItem('midaddExternalTemplate');
         return {
           markdown: parsed.markdown || defaultPreset.markdown,
@@ -52,8 +60,8 @@ function PlaygroundApp() {
     };
   });
 
-  const [markdown, setMarkdown] = useState(initialData.markdown);
-  const [documentTitle, setDocumentTitle] = useState(initialData.title);
+  const [markdown, setMarkdown] = useState<string>(initialData.markdown);
+  const [documentTitle, setDocumentTitle] = useState<string>(initialData.title);
   const [currentDocId, setCurrentDocId] = useState<string | undefined>(undefined);
   const [docxBase64, setDocxBase64] = useState<string | undefined>(undefined);
 
@@ -86,7 +94,7 @@ function PlaygroundApp() {
         setDocumentTitle(headingMatch[1].trim());
       }
     } else {
-      setMarkdown(prev => prev + '\n\n' + newMd);
+      setMarkdown((prev: string) => prev + '\n\n' + newMd);
     }
   };
 
@@ -99,7 +107,10 @@ function PlaygroundApp() {
 
     setIsExporting(true);
     try {
-      const filename = `${documentTitle.replace(/[^a-zA-Z0-9_\-\u0600-\u06FF]/g, '_')}.docx`;
+      const filename = `${documentTitle.replace(
+        /[^a-zA-Z0-9_\-\u0600-\u06FF]/g,
+        '_'
+      )}.docx`;
       await exportToDocx(markdown, filename);
 
       // Deduct credit
