@@ -32,9 +32,28 @@ function PlaygroundApp() {
   const [isDark, toggleTheme] = useTheme();
 
   // Initial document state (preloaded with rich preset so playground is immediately stunning)
+  // Load external template if selected from /templates (lazily in useState initializer to avoid effect setState)
   const defaultPreset = SAMPLE_MARKDOWN_PRESETS[0];
-  const [markdown, setMarkdown] = useState(defaultPreset.markdown);
-  const [documentTitle, setDocumentTitle] = useState('Quantum Wave Mechanics Research');
+  const [initialData] = useState(() => {
+    try {
+      const raw = localStorage.getItem('midaddExternalTemplate');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        localStorage.removeItem('midaddExternalTemplate');
+        return {
+          markdown: parsed.markdown || defaultPreset.markdown,
+          title: parsed.title || 'Quantum Wave Mechanics Research',
+        };
+      }
+    } catch {}
+    return {
+      markdown: defaultPreset.markdown,
+      title: 'Quantum Wave Mechanics Research',
+    };
+  });
+
+  const [markdown, setMarkdown] = useState(initialData.markdown);
+  const [documentTitle, setDocumentTitle] = useState(initialData.title);
   const [currentDocId, setCurrentDocId] = useState<string | undefined>(undefined);
   const [docxBase64, setDocxBase64] = useState<string | undefined>(undefined);
 
@@ -44,23 +63,6 @@ function PlaygroundApp() {
   const [isSavedDrawerOpen, setIsSavedDrawerOpen] = useState(false);
   const [isOutOfCreditsOpen, setIsOutOfCreditsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-
-  // Load external template if selected from /templates
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('midaddExternalTemplate');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        localStorage.removeItem('midaddExternalTemplate');
-        if (parsed.markdown) {
-          setMarkdown(parsed.markdown);
-          if (parsed.title) {
-            setDocumentTitle(parsed.title);
-          }
-        }
-      }
-    } catch {}
-  }, []); // Run once on mount
 
   // Global keyboard shortcuts (Ctrl+K or Cmd+K to open insert modal)
   useEffect(() => {
